@@ -1,6 +1,6 @@
 {
   "name": "tubeglot",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Personal-first, open-source YouTube metadata and subtitle localization helper",
   "type": "module",
   "scripts": {

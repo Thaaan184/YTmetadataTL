@@ -5,7 +5,7 @@ export default defineConfig({
   manifest: {
     name: 'TubeGlot - YouTube Metadata & Subtitle Localizer',
     description: 'Personal-first, open-source YouTube localization tool without central backends or credit caps.',
-    version: '0.1.0',
+    version: '1.0.0',
     permissions: ['storage', 'identity'],
     host_permissions: ['https://www.googleapis.com/*'],
   },

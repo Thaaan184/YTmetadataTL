@@ -81,12 +81,39 @@ TubeGlot supports 1-click publishing directly to YouTube Studio without download
 # Typecheck
 npm run typecheck
 
-# Run 111+ unit tests with coverage
+# Run 124 unit tests with coverage (>94%)
 npm run test:coverage
 
 # Build the Chrome Manifest V3 extension
 npm run build
 ```
+
+---
+
+## Repository Structure
+
+```text
+├── core/                   # Pure TypeScript engines (independent of UI framework)
+│   ├── jobs/               # Translation runner, token-aware chunking, batch retry
+│   ├── localization/       # BCP-47 locale database & YouTube metadata validator
+│   ├── providers/          # 9Router, Ollama, OpenAI-compatible adapters, credential redaction
+│   ├── subtitles/          # SRT/VTT parsers, serializers, formatting tokenizers
+│   └── youtube/            # Official YouTube Data API v3 client & OAuth 2.0 PKCE
+├── entrypoints/            # Chrome MV3 entrypoints (WXT framework)
+│   └── popup/              # 3-Tab Extension UI (Subtitles, Metadata, Settings)
+├── docs/                   # Architectural Decision Records (ADRs) & Security Specs
+│   ├── decisions/          # ADR-0001, ADR-0002, ADR-0003
+│   ├── plan.md             # Complete 17-phase agentic master plan
+│   ├── privacy-and-data-flow.md
+│   ├── threat-model.md
+│   ├── troubleshooting.md
+│   └── smoke-test.md
+└── tests/                  # Automated test suite (Vitest + v8 coverage)
+    ├── fixtures/           # Sample SRT & WebVTT files
+    └── unit/               # 16 unit test suites covering all core modules & UI
+```
+
+For detailed architectural and security documents, see [`docs/README.md`](docs/README.md).
 
 ---
 
