@@ -31,8 +31,21 @@ export function redactSecrets(input: string): string {
 }
 
 /**
- * Strips query parameters containing secrets from an endpoint URL.
+ * Redacts specific known secrets as well as general secret patterns.
  */
+export function redactText(input: string, specificSecrets: (string | undefined | null)[] = []): string {
+  if (!input) return '';
+  let result = redactSecrets(input);
+
+  for (const secret of specificSecrets) {
+    if (secret && secret.length >= 4) {
+      result = result.split(secret).join('[REDACTED]');
+    }
+  }
+
+  return result;
+}
+
 export function sanitizeEndpointUrl(rawUrl: string): string {
   try {
     const url = new URL(rawUrl);

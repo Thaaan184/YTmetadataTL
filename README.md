@@ -56,6 +56,25 @@ TubeGlot is pre-configured with a first-class preset for 9Router:
 
 ---
 
+## Direct YouTube Studio Integration (Optional OAuth 2.0)
+
+TubeGlot supports 1-click publishing directly to YouTube Studio without downloading or uploading files manually:
+
+### 1-Time Google Cloud Setup
+1. Create a project at [Google Cloud Console](https://console.cloud.google.com/).
+2. Enable **YouTube Data API v3** in APIs & Services.
+3. In **OAuth Consent Screen**, select *External*, add your Google email under *Test Users*, and add scope `https://www.googleapis.com/auth/youtube.force-ssl`.
+4. In **Credentials**, create an **OAuth Client ID** (Type: *Web Application* or *Chrome Extension*).
+5. Open TubeGlot **Settings** tab and copy your generated **Redirect URI** (`https://<ext-id>.chromiumapp.org/`), then paste it into your Google Cloud Authorized Redirect URIs.
+6. Paste your **Client ID** into TubeGlot Settings and click **Sign in with Google**.
+
+### Safe Publishing & Quota Gate
+- TubeGlot uses a strict read-modify-write pattern: updating localized titles/descriptions never overwrites categories or existing translations in other languages.
+- A confirmation review modal displays exact field diffs and estimated quota costs before any change is published to YouTube.
+
+
+---
+
 ## Development & Testing
 
 ```bash

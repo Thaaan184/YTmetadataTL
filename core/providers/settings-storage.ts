@@ -5,6 +5,7 @@ export interface UserSettings {
   providers: ProviderConfig[];
   targetLocales: string[];
   persistKeysLocally: boolean; // Opt-in flag with security warning
+  googleOAuthClientId?: string; // Optional user Google OAuth 2.0 Client ID for Phase 6
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {

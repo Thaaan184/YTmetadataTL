@@ -45,4 +45,24 @@ describe('Extension UI Structure & Accessibility', () => {
     expect(htmlContent).toContain('id="copy-meta-desc-btn"');
     expect(htmlContent).toContain('id="copy-meta-tags-btn"');
   });
+
+  it('contains Phase 6 Google OAuth and direct YouTube sync controls', () => {
+    expect(htmlContent).toContain('id="settings-google-client-id"');
+    expect(htmlContent).toContain('id="connect-google-btn"');
+    expect(htmlContent).toContain('id="disconnect-google-btn"');
+    expect(htmlContent).toContain('id="redirect-uri-display"');
+    expect(htmlContent).toContain('id="subtitles-direct-sync"');
+    expect(htmlContent).toContain('id="upload-subtitles-yt-btn"');
+    expect(htmlContent).toContain('id="fetch-original-meta-btn"');
+    expect(htmlContent).toContain('id="publish-metadata-yt-btn"');
+  });
+
+  it('contains mandatory confirmation preview modal with quota warning before write', () => {
+    expect(htmlContent).toContain('id="confirmation-modal"');
+    expect(htmlContent).toContain('id="modal-diff-container"');
+    expect(htmlContent).toContain('id="modal-quota-cost"');
+    expect(htmlContent).toContain('id="modal-confirm-btn"');
+    expect(htmlContent).toContain('id="modal-cancel-btn"');
+  });
 });
+

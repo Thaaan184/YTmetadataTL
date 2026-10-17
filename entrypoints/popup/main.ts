@@ -23,12 +23,55 @@ import {
   runMetadataTranslation,
 } from '../../core/jobs/translation-runner';
 import { SUPPORTED_LOCALES } from '../../core/localization/locales';
+import {
+  authenticateGoogle,
+  getStoredToken,
+  setStoredToken,
+  clearStoredToken,
+  fetchVideo,
+  updateVideoLocalization,
+  uploadCaption,
+  YouTubeApiError,
+} from '../../core/youtube';
 
 // State
 let currentSettings: UserSettings;
 let currentLoadedDoc: SubtitleDocument | null = null;
 let currentTranslatedDoc: SubtitleDocument | null = null;
 let activeAbortController: AbortController | null = null;
+
+interface PendingWriteAction {
+  title: string;
+  summary: string;
+  diffText: string;
+  quotaCost: number;
+  execute: () => Promise<void>;
+}
+
+let pendingWriteAction: PendingWriteAction | null = null;
+
+function showConfirmationModal(action: PendingWriteAction): void {
+  pendingWriteAction = action;
+  const modal = document.getElementById('confirmation-modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalSummary = document.getElementById('modal-summary');
+  const modalDiff = document.getElementById('modal-diff-container');
+  const modalQuota = document.getElementById('modal-quota-cost');
+
+  if (modalTitle) modalTitle.textContent = action.title;
+  if (modalSummary) modalSummary.textContent = action.summary;
+  if (modalDiff) modalDiff.textContent = action.diffText;
+  if (modalQuota) modalQuota.textContent = String(action.quotaCost);
+
+  if (modal) modal.style.display = 'flex';
+}
+
+function hideConfirmationModal(): void {
+  pendingWriteAction = null;
+  const modal = document.getElementById('confirmation-modal');
+  if (modal) modal.style.display = 'none';
+}
+
 
 function showAlert(message: string, type: 'info' | 'error' | 'success' = 'info'): void {
   const alertEl = document.getElementById('global-alert');
@@ -212,6 +255,8 @@ function setupSubtitlesWorkflow(): void {
         previewBox.textContent = serialized;
       }
       if (actionsBox) actionsBox.style.display = 'flex';
+      const syncBox = document.getElementById('subtitles-direct-sync');
+      if (syncBox) syncBox.style.display = 'block';
       showAlert('Translation completed successfully!', 'success');
     } catch (err) {
       showAlert(`Translation failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
@@ -248,6 +293,57 @@ function setupSubtitlesWorkflow(): void {
     const content = isVtt ? serializeVtt(currentTranslatedDoc) : serializeSrt(currentTranslatedDoc);
     await navigator.clipboard.writeText(content);
     showAlert('Subtitles copied to clipboard!', 'success');
+  });
+
+  // Direct YouTube Upload
+  const uploadYtBtn = document.getElementById('upload-subtitles-yt-btn');
+  const videoIdInput = document.getElementById('subtitles-video-id') as HTMLInputElement;
+
+  uploadYtBtn?.addEventListener('click', () => {
+    const token = getStoredToken();
+    if (!token) {
+      showAlert('Google Account not connected. Please connect in Settings tab.', 'error');
+      return;
+    }
+
+    const videoId = videoIdInput?.value.trim();
+    if (!videoId) {
+      showAlert('Please enter a target YouTube Video ID.', 'error');
+      return;
+    }
+
+    if (!currentTranslatedDoc) {
+      showAlert('No translated subtitle ready to upload.', 'error');
+      return;
+    }
+
+    const targetLang = targetLocaleSelect.value;
+    const isVtt = currentTranslatedDoc.format === 'vtt';
+    const content = isVtt ? serializeVtt(currentTranslatedDoc) : serializeSrt(currentTranslatedDoc);
+
+    showConfirmationModal({
+      title: 'Confirm Subtitle Upload to YouTube Studio',
+      summary: `Uploading ${isVtt ? 'WebVTT' : 'SRT'} caption track to video [${videoId}] for language [${targetLang}].`,
+      diffText: content.substring(0, 1000) + (content.length > 1000 ? '\n... (truncated preview)' : ''),
+      quotaCost: 400,
+      execute: async () => {
+        uploadYtBtn.setAttribute('disabled', 'true');
+        try {
+          const res = await uploadCaption(
+            videoId,
+            targetLang,
+            `TubeGlot Subtitles (${targetLang.toUpperCase()})`,
+            content,
+            token
+          );
+          showAlert(`Subtitles uploaded to YouTube successfully! Track ID: ${res.id}`, 'success');
+        } catch (err) {
+          showAlert(`Upload failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
+        } finally {
+          uploadYtBtn.removeAttribute('disabled');
+        }
+      },
+    });
   });
 }
 
@@ -332,6 +428,86 @@ function setupMetadataWorkflow(): void {
       await navigator.clipboard.writeText(resultTags.value);
       showAlert('Tags copied to clipboard!', 'success');
     }
+  });
+
+  // Direct YouTube Metadata Sync
+  const fetchOriginalBtn = document.getElementById('fetch-original-meta-btn');
+  const publishMetaBtn = document.getElementById('publish-metadata-yt-btn');
+  const metaVideoIdInput = document.getElementById('metadata-video-id') as HTMLInputElement;
+
+  fetchOriginalBtn?.addEventListener('click', async () => {
+    const token = getStoredToken();
+    if (!token) {
+      showAlert('Google Account not connected. Please connect in Settings tab.', 'error');
+      return;
+    }
+
+    const videoId = metaVideoIdInput?.value.trim();
+    if (!videoId) {
+      showAlert('Please enter a target YouTube Video ID.', 'error');
+      return;
+    }
+
+    fetchOriginalBtn.setAttribute('disabled', 'true');
+    try {
+      const video = await fetchVideo(videoId, token);
+      titleInput.value = video.snippet.title;
+      descInput.value = video.snippet.description;
+
+      // Update counters
+      const titleLen = titleInput.value.length;
+      if (titleCount) titleCount.textContent = `${titleLen} / 100`;
+      const descLen = descInput.value.length;
+      if (descCount) descCount.textContent = `${descLen} / 5000`;
+
+      showAlert(`Fetched video "${video.snippet.title}" from YouTube!`, 'success');
+    } catch (err) {
+      showAlert(`Fetch failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
+    } finally {
+      fetchOriginalBtn.removeAttribute('disabled');
+    }
+  });
+
+  publishMetaBtn?.addEventListener('click', () => {
+    const token = getStoredToken();
+    if (!token) {
+      showAlert('Google Account not connected. Please connect in Settings tab.', 'error');
+      return;
+    }
+
+    const videoId = metaVideoIdInput?.value.trim();
+    if (!videoId) {
+      showAlert('Please enter a target YouTube Video ID.', 'error');
+      return;
+    }
+
+    const locTitle = resultTitle?.value.trim();
+    const locDesc = resultDesc?.value.trim();
+
+    if (!locTitle) {
+      showAlert('No localized title generated yet.', 'error');
+      return;
+    }
+
+    const targetLocale = targetLocaleSelect.value;
+
+    showConfirmationModal({
+      title: 'Confirm Metadata Publication to YouTube Studio',
+      summary: `Updating localizations[${targetLocale}] on video [${videoId}]. Original titles/descriptions and categories will be strictly preserved.`,
+      diffText: `Locale: ${targetLocale}\nTitle: ${locTitle}\nDescription:\n${locDesc}`,
+      quotaCost: 50,
+      execute: async () => {
+        publishMetaBtn.setAttribute('disabled', 'true');
+        try {
+          await updateVideoLocalization(videoId, targetLocale, locTitle, locDesc, token);
+          showAlert(`Metadata for [${targetLocale}] published to YouTube video [${videoId}] successfully!`, 'success');
+        } catch (err) {
+          showAlert(`Publication failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
+        } finally {
+          publishMetaBtn.removeAttribute('disabled');
+        }
+      },
+    });
   });
 }
 
@@ -431,9 +607,90 @@ function setupSettingsWorkflow(): void {
     showAlert('All stored keys cleared from memory and storage.', 'info');
   });
 
+  // Google OAuth Controls
+  const googleClientIdInput = document.getElementById('settings-google-client-id') as HTMLInputElement;
+  const redirectDisplay = document.getElementById('redirect-uri-display');
+  const copyRedirectBtn = document.getElementById('copy-redirect-uri-btn');
+  const connectGoogleBtn = document.getElementById('connect-google-btn');
+  const disconnectGoogleBtn = document.getElementById('disconnect-google-btn');
+  const googleAccountStatus = document.getElementById('google-account-status');
+
+  const redirectUri =
+    typeof chrome !== 'undefined' && chrome.identity?.getRedirectURL
+      ? chrome.identity.getRedirectURL()
+      : 'https://<extension-id>.chromiumapp.org/';
+
+  if (redirectDisplay) redirectDisplay.textContent = redirectUri;
+
+  copyRedirectBtn?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(redirectUri);
+    showAlert('Redirect URI copied to clipboard!', 'success');
+  });
+
+  function updateGoogleStatus(): void {
+    const token = getStoredToken();
+    if (token) {
+      if (googleAccountStatus) {
+        googleAccountStatus.textContent = 'Status: Connected (Active Session)';
+        googleAccountStatus.style.color = 'var(--success-color)';
+      }
+      if (connectGoogleBtn) connectGoogleBtn.style.display = 'none';
+      if (disconnectGoogleBtn) disconnectGoogleBtn.style.display = 'inline-flex';
+    } else {
+      if (googleAccountStatus) {
+        googleAccountStatus.textContent = 'Status: Not Connected';
+        googleAccountStatus.style.color = 'var(--text-muted)';
+      }
+      if (connectGoogleBtn) connectGoogleBtn.style.display = 'inline-flex';
+      if (disconnectGoogleBtn) disconnectGoogleBtn.style.display = 'none';
+    }
+  }
+
+  if (googleClientIdInput && currentSettings.googleOAuthClientId) {
+    googleClientIdInput.value = currentSettings.googleOAuthClientId;
+  }
+
+  connectGoogleBtn?.addEventListener('click', async () => {
+    const clientId = googleClientIdInput?.value.trim();
+    if (!clientId) {
+      showAlert('Please enter your Google OAuth Client ID first.', 'error');
+      return;
+    }
+
+    currentSettings.googleOAuthClientId = clientId;
+    await saveSettings(currentSettings);
+
+    try {
+      showAlert('Opening Google sign-in window...', 'info');
+      await authenticateGoogle(clientId);
+      updateGoogleStatus();
+      showAlert('Connected to Google account successfully!', 'success');
+    } catch (err) {
+      showAlert(`Google sign-in failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
+    }
+  });
+
+  disconnectGoogleBtn?.addEventListener('click', () => {
+    clearStoredToken();
+    updateGoogleStatus();
+    showAlert('Disconnected Google account session.', 'info');
+  });
+
+  // Modal event wiring
+  document.getElementById('modal-close-btn')?.addEventListener('click', hideConfirmationModal);
+  document.getElementById('modal-cancel-btn')?.addEventListener('click', hideConfirmationModal);
+  document.getElementById('modal-confirm-btn')?.addEventListener('click', async () => {
+    if (pendingWriteAction) {
+      const action = pendingWriteAction;
+      hideConfirmationModal();
+      await action.execute();
+    }
+  });
+
   // Initial load
   persistCheck.checked = currentSettings.persistKeysLocally;
   renderProviderList();
+  updateGoogleStatus();
 }
 
 async function init(): Promise<void> {
