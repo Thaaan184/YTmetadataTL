@@ -11,6 +11,12 @@ export const DEFAULT_SETTINGS: UserSettings = {
   activeProviderId: 'mock',
   providers: [
     {
+      id: '9router',
+      name: '9Router (Local Gateway)',
+      baseUrl: 'http://localhost:20128/v1',
+      model: 'deepseek-chat',
+    },
+    {
       id: 'mock',
       name: 'Mock Test Provider',
       baseUrl: 'http://localhost',

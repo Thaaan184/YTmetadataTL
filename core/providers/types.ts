@@ -1,6 +1,6 @@
 import { redactSecrets, sanitizeEndpointUrl } from './redact';
 
-export type ProviderId = 'openai-compatible' | 'ollama' | 'mock';
+export type ProviderId = 'openai-compatible' | 'ollama' | 'mock' | '9router';
 
 export interface ProviderConfig {
   id: ProviderId;

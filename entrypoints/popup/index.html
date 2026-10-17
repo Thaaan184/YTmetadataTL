@@ -4,12 +4,176 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TubeGlot</title>
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div id="app">
-      <h1>TubeGlot</h1>
-      <p>YouTube Metadata & Subtitle Localizer</p>
-    </div>
+    <header>
+      <div class="brand-title">
+        <span>🎬 TubeGlot</span>
+      </div>
+      <div id="active-provider-badge" class="active-provider-badge">Provider: 9Router</div>
+    </header>
+
+    <nav class="tabs">
+      <button id="tab-btn-subtitles" class="active" data-tab="tab-subtitles">Subtitles</button>
+      <button id="tab-btn-metadata" data-tab="tab-metadata">Metadata</button>
+      <button id="tab-btn-settings" data-tab="tab-settings">Settings</button>
+    </nav>
+
+    <main>
+      <div id="global-alert" class="alert"></div>
+
+      <!-- TAB 1: SUBTITLES -->
+      <section id="tab-subtitles" class="tab-pane active">
+        <div class="form-group">
+          <div class="dropzone" id="subtitle-dropzone">
+            <p><strong>Click to select</strong> or drop a <code>.srt</code> or <code>.vtt</code> file here</p>
+            <input type="file" id="subtitle-file-input" accept=".srt,.vtt" style="display: none;" />
+          </div>
+          <div id="file-info" style="margin-top: 6px; font-size: 11px; color: var(--text-muted); display: none;"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="subtitles-target-locale">Target Language</label>
+          <select id="subtitles-target-locale"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="subtitles-tone">Tone / Style Guidance (Optional)</label>
+          <input type="text" id="subtitles-tone" placeholder="Natural colloquial translation preserving humor" />
+        </div>
+
+        <div class="btn-group">
+          <button id="start-subtitles-btn" class="btn-primary" disabled>Start Translation</button>
+          <button id="cancel-subtitles-btn" class="btn-danger" style="display: none;">Cancel</button>
+        </div>
+
+        <div id="subtitles-progress" class="progress-container">
+          <div class="progress-header">
+            <span id="subtitles-progress-status">Translating...</span>
+            <span id="subtitles-progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-outer">
+            <div id="subtitles-progress-bar" class="progress-bar-inner"></div>
+          </div>
+        </div>
+
+        <div id="subtitles-preview" class="preview-box"></div>
+
+        <div id="subtitles-actions" class="btn-group" style="margin-top: 10px; display: none;">
+          <button id="download-subtitles-btn" class="btn-secondary">Download Subtitle File</button>
+          <button id="copy-subtitles-btn" class="btn-secondary">Copy to Clipboard</button>
+        </div>
+      </section>
+
+      <!-- TAB 2: METADATA -->
+      <section id="tab-metadata" class="tab-pane">
+        <div class="form-group">
+          <div class="label-row">
+            <label for="meta-source-title">Source Video Title</label>
+            <span id="title-char-count" class="char-counter">0 / 100</span>
+          </div>
+          <input type="text" id="meta-source-title" placeholder="Original video title in source language" maxlength="100" />
+        </div>
+
+        <div class="form-group">
+          <div class="label-row">
+            <label for="meta-source-desc">Source Video Description</label>
+            <span id="desc-char-count" class="char-counter">0 / 5000</span>
+          </div>
+          <textarea id="meta-source-desc" rows="4" placeholder="Original video description with links" maxlength="5000"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="metadata-target-locale">Target Locale</label>
+          <select id="metadata-target-locale"></select>
+        </div>
+
+        <button id="translate-meta-btn" class="btn-primary">Translate Metadata</button>
+
+        <div id="metadata-progress" class="progress-container">
+          <div class="progress-header">
+            <span id="meta-progress-status">Translating metadata...</span>
+          </div>
+          <div class="progress-bar-outer">
+            <div id="meta-progress-bar" class="progress-bar-inner" style="width: 50%;"></div>
+          </div>
+        </div>
+
+        <div id="metadata-result-container" style="margin-top: 14px; display: none;">
+          <div class="form-group">
+            <div class="label-row">
+              <label>Localized Title</label>
+              <button id="copy-meta-title-btn" class="btn-secondary" style="padding: 2px 8px; font-size: 11px;">Copy Title</button>
+            </div>
+            <input type="text" id="meta-result-title" readonly />
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label>Localized Description</label>
+              <button id="copy-meta-desc-btn" class="btn-secondary" style="padding: 2px 8px; font-size: 11px;">Copy Desc</button>
+            </div>
+            <textarea id="meta-result-desc" rows="4" readonly></textarea>
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label>Tag / Keyword Suggestions</label>
+              <button id="copy-meta-tags-btn" class="btn-secondary" style="padding: 2px 8px; font-size: 11px;">Copy Tags</button>
+            </div>
+            <input type="text" id="meta-result-tags" readonly />
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: SETTINGS -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="form-group">
+          <label for="settings-provider-select">Active Provider</label>
+          <select id="settings-provider-select"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="settings-base-url">Base URL</label>
+          <input type="text" id="settings-base-url" placeholder="http://localhost:20128/v1" />
+        </div>
+
+        <div class="form-group">
+          <label for="settings-model">Model Name</label>
+          <input type="text" id="settings-model" placeholder="deepseek-chat" />
+        </div>
+
+        <div class="form-group">
+          <div class="label-row">
+            <label for="settings-api-key">API Key</label>
+            <button id="toggle-key-visibility-btn" class="btn-secondary" style="padding: 2px 8px; font-size: 11px;">Show</button>
+          </div>
+          <input type="password" id="settings-api-key" placeholder="Bearer token / API key (optional for local)" />
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="settings-persist-key" />
+          <div>
+            <label for="settings-persist-key" style="margin: 0; cursor: pointer; color: var(--text-main);">
+              Remember API key across browser restarts
+            </label>
+            <p class="security-notice">
+              Warning: Keys are held in-memory during the browser session by default. Opting in saves the key to Chrome local storage, which is not encrypted by Chrome.
+            </p>
+          </div>
+        </div>
+
+        <div class="btn-group" style="margin-top: 16px;">
+          <button id="save-settings-btn" class="btn-primary">Save Settings</button>
+          <button id="test-connection-btn" class="btn-secondary">Test Connection</button>
+          <button id="clear-keys-btn" class="btn-danger">Clear Stored Keys</button>
+        </div>
+
+        <div id="connection-status-msg" style="margin-top: 10px; font-size: 12px; display: none;"></div>
+      </section>
+    </main>
+
     <script type="module" src="./main.ts"></script>
   </body>
 </html>
