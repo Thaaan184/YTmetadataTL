@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Production build outputs
+.output/
+dist/
+dist-ssr/
+*.local
+
+# WXT artifacts
+.wxt/
+
+# Environment files and credentials (CRITICAL - DO NOT TRACK)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+*.cert
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Coverage directory used by testing tools
+coverage/
+*.lcov
+
+# Editor and OS files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
