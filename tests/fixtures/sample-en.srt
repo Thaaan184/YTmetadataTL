@@ -1,0 +1,9 @@
+1
+00:00:01,000 --> 00:00:04,500
+Welcome to TubeGlot.
+The open-source localization helper.
+
+2
+00:00:05,000 --> 00:00:08,200
+It translates your video subtitles
+without monthly credit caps.
