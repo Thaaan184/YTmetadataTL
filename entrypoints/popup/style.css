@@ -317,8 +317,33 @@ textarea {
 }
 
 /* Direct YouTube Sync Cards & Modals */
-.direct-sync-card {
+.optional-sync-accordion {
   margin-top: 14px;
+  background-color: rgba(30, 41, 59, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.optional-sync-accordion summary {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.optional-sync-accordion summary:hover {
+  color: var(--accent-color);
+}
+
+.optional-sync-accordion[open] summary {
+  margin-bottom: 10px;
+  color: var(--accent-color);
+}
+
+.direct-sync-card {
+  margin-top: 6px;
   background-color: rgba(30, 41, 59, 0.7);
   border: 1px solid var(--border-color);
   border-radius: 6px;

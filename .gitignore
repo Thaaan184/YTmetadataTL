@@ -8,6 +8,7 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+*.zip
 
 # WXT artifacts
 .wxt/

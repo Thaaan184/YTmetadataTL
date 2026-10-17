@@ -65,18 +65,21 @@
           <button id="copy-subtitles-btn" class="btn-secondary">Copy to Clipboard</button>
         </div>
 
-        <!-- DIRECT YOUTUBE SYNC FOR SUBTITLES -->
-        <div id="subtitles-direct-sync" class="direct-sync-card" style="display: none;">
-          <div class="direct-sync-header">
-            <span>📺 Direct YouTube Studio Sync</span>
-            <span id="subtitles-yt-status" class="sync-badge">Manual or API</span>
+        <!-- DIRECT YOUTUBE SYNC FOR SUBTITLES (OPTIONAL) -->
+        <details class="optional-sync-accordion" id="subtitles-direct-sync-wrapper">
+          <summary>⚡ Optional: Direct YouTube Upload (OAuth)</summary>
+          <div id="subtitles-direct-sync" class="direct-sync-card">
+            <div class="direct-sync-header">
+              <span>📺 Direct YouTube Studio Sync</span>
+              <span id="subtitles-yt-status" class="sync-badge">API Ready</span>
+            </div>
+            <div class="form-group" style="margin-bottom: 6px;">
+              <label for="subtitles-video-id">Target YouTube Video ID</label>
+              <input type="text" id="subtitles-video-id" placeholder="e.g. dQw4w9WgXcQ" />
+            </div>
+            <button id="upload-subtitles-yt-btn" class="btn-primary" style="width: 100%;">Upload Subtitle Directly to YouTube</button>
           </div>
-          <div class="form-group" style="margin-bottom: 6px;">
-            <label for="subtitles-video-id">Target YouTube Video ID</label>
-            <input type="text" id="subtitles-video-id" placeholder="e.g. dQw4w9WgXcQ" />
-          </div>
-          <button id="upload-subtitles-yt-btn" class="btn-primary" style="width: 100%;">Upload Subtitle Directly to YouTube</button>
-        </div>
+        </details>
       </section>
 
       <!-- TAB 2: METADATA -->
@@ -138,21 +141,24 @@
             <input type="text" id="meta-result-tags" readonly />
           </div>
 
-          <!-- DIRECT YOUTUBE SYNC FOR METADATA -->
-          <div class="direct-sync-card">
-            <div class="direct-sync-header">
-              <span>📺 Direct YouTube Studio Sync</span>
-              <span id="meta-yt-status" class="sync-badge">Manual or API</span>
+          <!-- DIRECT YOUTUBE SYNC FOR METADATA (OPTIONAL) -->
+          <details class="optional-sync-accordion">
+            <summary>⚡ Optional: Direct YouTube Studio Publish (OAuth)</summary>
+            <div class="direct-sync-card">
+              <div class="direct-sync-header">
+                <span>📺 Direct YouTube Studio Sync</span>
+                <span id="meta-yt-status" class="sync-badge">API Ready</span>
+              </div>
+              <div class="form-group" style="margin-bottom: 6px;">
+                <label for="metadata-video-id">Target YouTube Video ID</label>
+                <input type="text" id="metadata-video-id" placeholder="e.g. dQw4w9WgXcQ" />
+              </div>
+              <div class="btn-group">
+                <button id="fetch-original-meta-btn" class="btn-secondary">Fetch Original</button>
+                <button id="publish-metadata-yt-btn" class="btn-primary">Publish to YouTube</button>
+              </div>
             </div>
-            <div class="form-group" style="margin-bottom: 6px;">
-              <label for="metadata-video-id">Target YouTube Video ID</label>
-              <input type="text" id="metadata-video-id" placeholder="e.g. dQw4w9WgXcQ" />
-            </div>
-            <div class="btn-group">
-              <button id="fetch-original-meta-btn" class="btn-secondary">Fetch Original</button>
-              <button id="publish-metadata-yt-btn" class="btn-primary">Publish to YouTube</button>
-            </div>
-          </div>
+          </details>
         </div>
       </section>
 
@@ -201,35 +207,39 @@
 
         <div id="connection-status-msg" style="margin-top: 10px; font-size: 12px; display: none;"></div>
 
-        <!-- GOOGLE OAUTH SECTION -->
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0 16px;" />
-        <div class="form-group">
-          <label style="font-weight: 600; color: var(--accent-color);">YouTube Studio Integration (OAuth 2.0)</label>
-          <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-            Connect your personal Google account to publish localizations directly to YouTube Studio without manual uploading.
-          </p>
-        </div>
+        <!-- GOOGLE OAUTH SECTION (OPTIONAL) -->
+        <details class="optional-sync-accordion" style="margin-top: 20px;">
+          <summary>🔑 Optional: YouTube Studio OAuth 2.0 Setup</summary>
+          <div style="padding-top: 8px;">
+            <div class="form-group">
+              <label style="font-weight: 600; color: var(--accent-color);">YouTube Studio Direct Sync</label>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Only needed if you want 1-click publishing directly to YouTube without copying/downloading.
+              </p>
+            </div>
 
-        <div class="form-group">
-          <label for="settings-google-client-id">Google OAuth Client ID</label>
-          <input type="text" id="settings-google-client-id" placeholder="xxxxxxxxxxxx.apps.googleusercontent.com" />
-        </div>
+            <div class="form-group">
+              <label for="settings-google-client-id">Google OAuth Client ID</label>
+              <input type="text" id="settings-google-client-id" placeholder="xxxxxxxxxxxx.apps.googleusercontent.com" />
+            </div>
 
-        <div id="google-redirect-info" style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; background: rgba(0,0,0,0.25); padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">
-          <span>Redirect URI for Google Cloud Console:</span>
-          <div style="display: flex; gap: 4px; margin-top: 4px; align-items: center;">
-            <code id="redirect-uri-display" style="word-break: break-all; flex: 1; font-size: 10px; color: var(--accent-color);">chrome-extension://...</code>
-            <button id="copy-redirect-uri-btn" class="btn-secondary" style="padding: 2px 6px; font-size: 10px;">Copy</button>
+            <div id="google-redirect-info" style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; background: rgba(0,0,0,0.25); padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">
+              <span>Redirect URI for Google Cloud Console:</span>
+              <div style="display: flex; gap: 4px; margin-top: 4px; align-items: center;">
+                <code id="redirect-uri-display" style="word-break: break-all; flex: 1; font-size: 10px; color: var(--accent-color);">chrome-extension://...</code>
+                <button id="copy-redirect-uri-btn" class="btn-secondary" style="padding: 2px 6px; font-size: 10px;">Copy</button>
+              </div>
+            </div>
+
+            <div class="btn-group">
+              <button id="connect-google-btn" class="btn-primary">Sign in with Google</button>
+              <button id="disconnect-google-btn" class="btn-danger" style="display: none;">Disconnect Google Account</button>
+            </div>
+            <div id="google-account-status" style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+              Status: Not Connected
+            </div>
           </div>
-        </div>
-
-        <div class="btn-group">
-          <button id="connect-google-btn" class="btn-primary">Sign in with Google</button>
-          <button id="disconnect-google-btn" class="btn-danger" style="display: none;">Disconnect Google Account</button>
-        </div>
-        <div id="google-account-status" style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-          Status: Not Connected
-        </div>
+        </details>
       </section>
     </main>
 
